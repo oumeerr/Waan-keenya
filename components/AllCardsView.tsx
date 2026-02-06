@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { generateCard, generateMiniCard } from '../constants';
 import { APP_CONFIG } from '../config';
@@ -44,7 +43,7 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
              <i className="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-hb-muted/40 text-[9px]"></i>
              <input 
                type="number" 
-               placeholder="Jump to..." 
+               placeholder="1-400..." 
                className="w-full h-7 pl-6 pr-2 bg-white border border-hb-border rounded-lg text-[9px] font-bold outline-none focus:border-hb-blue/30"
                onChange={(e) => {
                  const val = e.target.value;
@@ -90,7 +89,7 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
       </div>
 
       <div className="text-center py-4 opacity-10">
-        <p className="text-[7px] font-black uppercase tracking-[0.3em]">Full Deck Displayed</p>
+        <p className="text-[7px] font-black uppercase tracking-[0.3em]">Full Deck (400) Displayed</p>
       </div>
     </div>
   );

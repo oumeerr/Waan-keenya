@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
 export interface PromoScript {
@@ -14,16 +13,16 @@ export interface PromoScript {
 export const generatePromoDescription = async (topic: string): Promise<PromoScript | null> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  const systemInstruction = `You are a world-class creative director and social media strategist for Waan Keenya Bingo. 
+  const systemInstruction = `You are a world-class creative director and social media strategist for Beteseb Bet Bingo. 
 Your goal is to create high-energy, viral promotional content for the Ethiopian market.
-Waan Keenya Bingo is a high-stakes Telegram Bingo Mini App.
+Beteseb Bet Bingo is a high-stakes Telegram Bingo Mini App.
 Brand Colors: #2563EB (Primary Blue), #F97316 (Action Gold).
 Target: Young adults in Ethiopia interested in gaming and social platforms.
 Tone: Energetic, trustworthy, slightly luxurious, and fast-paced.`;
 
   const prompt = `Create a viral social media post based on this context: "${topic}". 
 The post should drive excitement for the weekly 10,000 ETB prize pool.
-Mention that Waan Keenya Bingo is secure and payouts are instant.`;
+Mention that Beteseb Bet Bingo is secure and payouts are instant.`;
 
   try {
     const response = await ai.models.generateContent({

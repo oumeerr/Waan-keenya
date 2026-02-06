@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const HowToPlayView: React.FC = () => {
@@ -6,7 +5,7 @@ const HowToPlayView: React.FC = () => {
     <div className="p-6 pb-20">
       <div className="mb-8">
         <h2 className="text-2xl font-black text-hb-blue mb-1 italic tracking-tight uppercase">Master Guide</h2>
-        <p className="text-[11px] text-hb-muted font-bold uppercase tracking-widest">Master the Waan Keenya Bingo Engine</p>
+        <p className="text-[11px] text-hb-muted font-bold uppercase tracking-widest">Master the Beteseb Bet Bingo Engine</p>
       </div>
       
       <div className="space-y-8">
@@ -14,7 +13,7 @@ const HowToPlayView: React.FC = () => {
           <Step 
             num="1" 
             title="High-Entropy Selection" 
-            desc="Select cards from the 1-150 deck. Our new Entropy Engine ensures every card is mathematically distinct and hard to win early." 
+            desc="Select cards from the 1-400 deck. Our new Entropy Engine ensures every card is mathematically distinct and hard to win early." 
           />
           <Step 
             num="2" 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { generateCard, generateMiniCard } from '../constants';
 import { APP_CONFIG } from '../config';
@@ -64,15 +63,15 @@ const CardSelectionView: React.FC<CardSelectionViewProps> = ({ betAmount, mode, 
         </div>
       )}
 
-      {/* Minimized Number Grid (8 columns) */}
-      <div className="grid grid-cols-8 gap-1.5 bg-white/40 p-3 rounded-[20px] border border-hb-border shadow-inner justify-items-center">
+      {/* Optimized Dense Grid (10 columns, 25% size reduction to 27px) */}
+      <div className="grid grid-cols-10 gap-1 bg-white/40 p-2 rounded-[20px] border border-hb-border shadow-inner justify-items-center w-full">
         {cards.map(id => (
           <button
             key={id}
             onClick={() => setPreviewId(id)}
-            className={`w-[36px] h-[36px] rounded-lg flex items-center justify-center font-black text-[14px] tracking-tighter active:scale-90 transition-all border
+            className={`w-[27px] h-[27px] rounded-md flex items-center justify-center text-[10px] tracking-tighter active:scale-90 transition-all border
               ${selectedIds.has(id) 
-                ? 'bg-hb-gold text-hb-blueblack border-hb-gold shadow-md' 
+                ? 'bg-red-600 text-white font-black border-red-800 shadow-[0_0_8px_rgba(220,38,38,0.5)] scale-110 z-10' 
                 : 'bg-white text-hb-navy border-hb-border hover:border-hb-blue/20'}`}
           >
             {id}

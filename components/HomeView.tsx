@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface HomeViewProps {
@@ -39,9 +38,9 @@ const HomeView: React.FC<HomeViewProps> = ({ onQuickPlay }) => {
         <div className="bg-hb-surface border border-hb-border p-8 rounded-[2rem] shadow-sm">
            <div className="flex items-center justify-between mb-6">
               <h3 className="text-[12px] font-black text-hb-muted uppercase tracking-widest">Card Explorer</h3>
-              <span className="text-[12px] text-hb-gold font-bold px-3 py-1 bg-hb-gold/10 rounded-lg border border-hb-gold/20">1-150 Range</span>
+              <span className="text-[12px] text-hb-gold font-bold px-3 py-1 bg-hb-gold/10 rounded-lg border border-hb-gold/20">1-400 Range</span>
            </div>
-           <p className="text-[13px] text-hb-muted opacity-80 mb-6 font-medium leading-relaxed">Select your lucky numbers. Browse the full collection of available cards.</p>
+           <p className="text-[13px] text-hb-muted opacity-80 mb-6 font-medium leading-relaxed">Select your lucky numbers. Browse the full collection of 400 available cards.</p>
            <button 
              onClick={onQuickPlay}
              className="w-full py-5 bg-[#121212] rounded-[1.5rem] text-[12px] font-black text-hb-muted uppercase hover:text-white hover:border-hb-muted border border-hb-border transition-all shadow-inner"

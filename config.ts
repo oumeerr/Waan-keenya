@@ -6,12 +6,14 @@
 
 export const APP_CONFIG = {
   GAME: {
-    MATCHMAKING_SECONDS: 60, // Match start time set to 1 minute
+    MATCHMAKING_SECONDS: 60, // Each round window is 60 seconds
+    GLOBAL_ROUND_INTERVAL_MS: 60000, // Sync every 1 minute
     CALL_INTERVAL_CLASSIC_MS: 2000,
     CALL_INTERVAL_MINI_MS: 1500,
     HOUSE_FEE_PERCENT: 0.20, // 20% house fee as per promotion guide
     MAX_CARDS_PER_SESSION: 3, // Enforced 3 card limit
-    TOTAL_CARDS_AVAILABLE: 150,
+    TOTAL_CARDS_AVAILABLE: 400, // 400 unique cards
+    MIN_PLAYERS_TO_START: 2, // Minimum players required for arena to go live
   },
   WALLET: {
     WITHDRAWAL_START_HOUR: 3, // 3 AM

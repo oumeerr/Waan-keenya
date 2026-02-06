@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabase';
 import { View, Language, User } from './types';
@@ -18,6 +17,7 @@ import SettingsView from './components/SettingsView';
 import AllCardsView from './components/AllCardsView';
 import PaymentProofView from './components/PaymentProofView';
 import LoginView from './components/LoginView';
+import { APP_CONFIG } from './config';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,7 +30,7 @@ const App: React.FC = () => {
   const [isGameActive, setIsGameActive] = useState(false);
   const [matchStartTime, setMatchStartTime] = useState<number | null>(null);
 
-  // Default mock user for offline/demo mode
+  // Default mock user
   const [user, setUser] = useState<User>({
     id: 'guest',
     username: 'Guest_Player',
@@ -41,9 +41,7 @@ const App: React.FC = () => {
     photo: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest',
   });
 
-  // Supabase Auth Listener
   useEffect(() => {
-    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
@@ -65,17 +63,11 @@ const App: React.FC = () => {
 
   const loadUserProfile = async (authUser: any) => {
     try {
-      // 1. Try to fetch profile from the 'profiles' table
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
         .single();
-
-      if (error) {
-        console.warn("Profile fetch error, falling back to metadata:", error.message);
-        throw error;
-      }
 
       if (profile) {
         setUser({
@@ -88,26 +80,14 @@ const App: React.FC = () => {
           wins: profile.wins ?? 0,
           photo: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
         });
-        return;
       }
     } catch (e) {
-      // 2. Fallback to auth metadata if DB fetch fails
-      setUser({
-        id: authUser.id,
-        email: authUser.email,
-        username: authUser.user_metadata?.username || 'Player_' + authUser.id.slice(0, 4),
-        mobile: authUser.user_metadata?.mobile || 'Verified',
-        balance: authUser.user_metadata?.balance || 20, 
-        referrals: 0,
-        wins: 0,
-        photo: `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
-      });
+      console.error("Profile load fail", e);
     }
   };
 
   if (!isAuthenticated) {
     return <LoginView onLogin={() => {
-      // Allow manual override for Demo/Telegram Connect button which doesn't use Supabase email/pass
       setIsAuthenticated(true);
       setUser(prev => ({...prev, username: 'TelegramUser', balance: 20}));
     }} />;
@@ -118,11 +98,8 @@ const App: React.FC = () => {
 
   const navigateTo = (view: View, reset = false) => {
     if (reset) {
-      if (view === 'home') {
-        setViewStack(['home']);
-      } else {
-        setViewStack(['home', view]);
-      }
+      if (view === 'home') setViewStack(['home']);
+      else setViewStack(['home', view]);
     } else {
       setViewStack(prev => [...prev, view]);
     }
@@ -130,9 +107,7 @@ const App: React.FC = () => {
   };
 
   const goBack = () => {
-    if (viewStack.length > 1) {
-      setViewStack(prev => prev.slice(0, -1));
-    }
+    if (viewStack.length > 1) setViewStack(prev => prev.slice(0, -1));
   };
 
   const handleLogout = async () => {
@@ -145,44 +120,30 @@ const App: React.FC = () => {
   const handleStartGame = async (cardIds: number[]) => {
     const totalStake = cardIds.length * currentBet;
     if (user.balance < totalStake) {
-      alert(`Insufficient balance! Total entry fee for ${cardIds.length} cards is ${totalStake} ETB.`);
+      alert(`Insufficient balance! Total entry fee is ${totalStake} ETB.`);
       return;
     }
     
+    // Global synchronization logic: Round starts every minute (60s)
+    // The match always starts at the beginning of the next minute
+    const now = Date.now();
+    const targetStartTime = Math.ceil(now / APP_CONFIG.GAME.GLOBAL_ROUND_INTERVAL_MS) * APP_CONFIG.GAME.GLOBAL_ROUND_INTERVAL_MS;
+    
+    // Deduct balance
     const newBalance = user.balance - totalStake;
-    
-    // Optimistic UI update
     setUser(prev => ({ ...prev, balance: newBalance }));
-    
-    // Deduct from DB
     if (user.id !== 'guest') {
-       const { error } = await supabase
-        .from('profiles')
-        .update({ balance: newBalance })
-        .eq('id', user.id);
-        
-       if (error) {
-         console.error("Failed to update balance in DB:", error);
-         alert("Warning: Network error synchronizing balance.");
-       }
+       await supabase.from('profiles').update({ balance: newBalance }).eq('id', user.id);
     }
     
     setSelectedCardIds(cardIds);
-    setMatchStartTime(Date.now());
+    setMatchStartTime(targetStartTime);
     setIsGameActive(true);
     navigateTo('game');
   };
 
-  const handleQuickPlayFromGallery = (cardId: number, mode: 'classic' | 'mini') => {
-    setGameMode(mode);
-    setCurrentBet(50);
-    setSelectedCardIds([cardId]);
-    navigateTo('betting-list');
-  };
-
   return (
     <div className="flex flex-col h-screen w-full bg-hb-bg text-white shadow-2xl overflow-hidden relative font-sans">
-      {/* Header Container */}
       <div className="z-30 shadow-md sticky top-0 w-full bg-[#1A1A1A] border-b border-hb-border/50">
         <div className="max-w-md mx-auto">
           <header className="px-5 py-4 flex items-center justify-between h-[70px]">
@@ -197,14 +158,12 @@ const App: React.FC = () => {
                 </button>
               )}
             </div>
-            
             <div className="flex flex-col items-center gap-1.5 flex-1">
-              <span className="font-black text-xl italic tracking-tighter text-white">WAAN KEENYA BINGO</span>
+              <span className="font-black text-xl italic tracking-tighter text-white">BETESEB BET BINGO</span>
               <div className="bg-hb-gold text-hb-blueblack px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter shadow-sm">
-                10k Weekly Prize Pool
+                Live Multiplayer Arena
               </div>
             </div>
-
             <div className="flex flex-col items-end w-12 min-w-[85px]">
               <span className="text-[9px] text-hb-muted uppercase font-bold tracking-widest mb-1">Balance</span>
               <div className="flex items-center gap-1 bg-hb-surface px-3 py-1.5 rounded-xl border border-hb-border">
@@ -213,26 +172,8 @@ const App: React.FC = () => {
             </div>
           </header>
         </div>
-
-        {/* Persistent Active Match Banner */}
-        {isGameActive && currentView !== 'game' && (
-          <button 
-            onClick={() => navigateTo('game', true)}
-            className="w-full bg-hb-surface border-y border-hb-gold/30 text-hb-gold py-2.5 px-5 flex items-center justify-between animate-pulse"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-hb-gold animate-ping"></div>
-              <span className="text-[11px] font-black uppercase tracking-widest">Live Arena Active</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase opacity-80">Re-enter</span>
-              <i className="fas fa-external-link-alt text-[10px]"></i>
-            </div>
-          </button>
-        )}
       </div>
 
-      {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto pb-28 w-full bg-transparent">
         <div className="max-w-md mx-auto min-h-full">
           {currentView === 'home' && <HomeView onQuickPlay={() => navigateTo('betting-list')} />}
@@ -241,25 +182,9 @@ const App: React.FC = () => {
           {currentView === 'history' && <HistoryView />}
           {currentView === 'profile' && <ProfileView user={user} setUser={setUser} />}
           {currentView === 'how-to-play' && <HowToPlayView />}
-          {currentView === 'all-cards' && <AllCardsView onQuickPlay={handleQuickPlayFromGallery} />}
-          {currentView === 'payment-proof' && <PaymentProofView />}
-          {currentView === 'betting-list' && (
-            <BettingListView 
-              mode={gameMode}
-              onModeChange={setGameMode}
-              onSelectBet={(amt) => {
-                setCurrentBet(amt);
-                navigateTo('card-selection');
-              }} 
-            />
-          )}
-          {currentView === 'card-selection' && (
-            <CardSelectionView 
-              betAmount={currentBet}
-              mode={gameMode}
-              onSelectCard={handleStartGame} 
-            />
-          )}
+          {currentView === 'all-cards' && <AllCardsView onQuickPlay={(id, m) => { setGameMode(m); setCurrentBet(50); setSelectedCardIds([id]); navigateTo('betting-list'); }} />}
+          {currentView === 'betting-list' && <BettingListView mode={gameMode} onModeChange={setGameMode} onSelectBet={(amt) => { setCurrentBet(amt); navigateTo('card-selection'); }} />}
+          {currentView === 'card-selection' && <CardSelectionView betAmount={currentBet} mode={gameMode} onSelectCard={handleStartGame} />}
           {currentView === 'game' && selectedCardIds.length > 0 && matchStartTime !== null && (
             <GameView 
               cardIds={selectedCardIds} 
@@ -268,60 +193,33 @@ const App: React.FC = () => {
               user={user} 
               setUser={setUser}
               matchStartTime={matchStartTime}
-              onClose={() => {
-                setIsGameActive(false);
-                setMatchStartTime(null);
-                navigateTo('home', true);
-              }} 
+              onClose={() => { setIsGameActive(false); navigateTo('home', true); }} 
             />
           )}
           {currentView === 'promo' && <PromoGenerator />}
           {currentView === 'settings' && <SettingsView />}
+          {currentView === 'payment-proof' && <PaymentProofView />}
         </div>
       </main>
 
-      {/* Footer Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#1A1A1A]/95 backdrop-blur-xl border-t border-hb-border z-40 pb-safe shadow-2xl">
         <div className="max-w-md mx-auto flex items-center justify-around px-2 py-4">
           <FooterItem icon="fa-wallet" label={t('wallet')} active={currentView === 'wallet'} onClick={() => navigateTo('wallet', true)} />
           <FooterItem icon="fa-trophy" label={t('leaderboard')} active={currentView === 'leaderboard'} onClick={() => navigateTo('leaderboard', true)} />
-          
           <div className="relative -mt-14">
             <button 
-              onClick={() => {
-                if (isGameActive) {
-                  navigateTo('game', true);
-                } else {
-                  navigateTo('betting-list', true);
-                }
-              }}
-              className={`w-[56px] h-[56px] bg-hb-gold rounded-full border-[4px] border-hb-bg shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center justify-center text-hb-blueblack text-2xl transition-all active:scale-90 hover:brightness-110 ${currentView === 'betting-list' || isGameActive ? 'ring-4 ring-hb-gold/20' : ''}`}
+              onClick={() => { if (isGameActive) navigateTo('game', true); else navigateTo('betting-list', true); }}
+              className={`w-[56px] h-[56px] bg-hb-gold rounded-full border-[4px] border-hb-bg shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center justify-center text-hb-blueblack text-2xl transition-all active:scale-90 hover:brightness-110`}
             >
-              <i className={`fas ${isGameActive ? 'fa-external-link-alt' : 'fa-play'} ${!isGameActive && 'ml-1'}`}></i>
+              <i className={`fas ${isGameActive ? 'fa-external-link-alt' : 'fa-play'}`}></i>
             </button>
           </div>
-
           <FooterItem icon="fa-history" label={t('history')} active={currentView === 'history'} onClick={() => navigateTo('history', true)} />
           <FooterItem icon="fa-question-circle" label={t('howToPlay')} active={currentView === 'how-to-play'} onClick={() => navigateTo('how-to-play', true)} />
         </div>
       </nav>
 
-      {isSidebarOpen && (
-        <Sidebar 
-          user={user}
-          currentLang={lang} 
-          onLangChange={setLang} 
-          onClose={() => setSidebarOpen(false)} 
-          onNavigate={(v) => navigateTo(v, true)}
-          onLogout={handleLogout}
-        />
-      )}
-
-      <style>{`
-        .pb-safe {
-          padding-bottom: env(safe-area-inset-bottom, 0);
-        }
-      `}</style>
+      {isSidebarOpen && <Sidebar user={user} currentLang={lang} onLangChange={setLang} onClose={() => setSidebarOpen(false)} onNavigate={(v) => navigateTo(v, true)} onLogout={handleLogout} />}
     </div>
   );
 };

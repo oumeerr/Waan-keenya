@@ -1,6 +1,6 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BET_AMOUNTS, MINI_BET_AMOUNTS } from '../constants';
+import { APP_CONFIG } from '../config';
 
 interface BettingListViewProps {
   mode: 'classic' | 'mini';
@@ -10,9 +10,39 @@ interface BettingListViewProps {
 
 const BettingListView: React.FC<BettingListViewProps> = ({ mode, onModeChange, onSelectBet }) => {
   const currentAmounts = mode === 'mini' ? MINI_BET_AMOUNTS : BET_AMOUNTS;
+  const [globalCountdown, setGlobalCountdown] = useState(0);
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = Date.now();
+      const nextRound = Math.ceil(now / APP_CONFIG.GAME.GLOBAL_ROUND_INTERVAL_MS) * APP_CONFIG.GAME.GLOBAL_ROUND_INTERVAL_MS;
+      setGlobalCountdown(Math.ceil((nextRound - now) / 1000));
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="p-5">
+      {/* Global Sync Header */}
+      <div className="bg-hb-surface border border-hb-gold/30 p-4 rounded-[2rem] mb-6 flex items-center justify-between shadow-lg animate-in fade-in zoom-in duration-500">
+         <div className="flex items-center gap-3">
+           <div className="w-10 h-10 rounded-2xl bg-hb-gold/10 flex items-center justify-center">
+             <i className="fas fa-clock text-hb-gold animate-pulse"></i>
+           </div>
+           <div>
+             <span className="text-[10px] font-black text-hb-muted uppercase tracking-widest block mb-0.5">Next Live Arena</span>
+             <span className="text-[18px] font-black text-white italic">ROUND STARTING</span>
+           </div>
+         </div>
+         <div className="bg-hb-navy px-5 py-2 rounded-2xl border border-hb-border flex flex-col items-center min-w-[80px]">
+           <span className="text-[16px] font-black text-hb-gold tabular-nums leading-none">{globalCountdown}s</span>
+           <span className="text-[8px] font-black text-hb-muted uppercase tracking-tighter mt-1">Syncing...</span>
+         </div>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-black text-hb-blue mb-1.5 italic tracking-tight uppercase">
