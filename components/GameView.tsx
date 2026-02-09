@@ -34,9 +34,9 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
   const [winningCardIds, setWinningCardIds] = useState<number[]>([]);
   const [winnings, setWinnings] = useState(0);
   
-  // Players "Stacked" Logic: Start with 1 (the current user)
-  const [stackedPlayers, setStackedPlayers] = useState(1);
-  const stackedPlayersRef = useRef(1);
+  // Players "Stacked" Logic: Start with total card count (Each card acts as a player/entry)
+  const [stackedPlayers, setStackedPlayers] = useState(cardIds.length);
+  const stackedPlayersRef = useRef(cardIds.length);
 
   // Generate hard combinations on load
   const allCardsData = useRef<Record<number, number[][]>>(
@@ -48,10 +48,11 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
   // --- Core Game Logic ---
 
   const sessionPot = useMemo(() => {
-    // Pot scales with the number of stacked players
-    const totalRawStake = betAmount * cardIds.length * stackedPlayers;
+    // Pot scales with the number of stacked entries (cards)
+    // Formula: Total Entries * Bet Amount * (1 - House Fee)
+    const totalRawStake = betAmount * stackedPlayers;
     return Math.floor(totalRawStake * (1 - APP_CONFIG.GAME.HOUSE_FEE_PERCENT));
-  }, [betAmount, cardIds.length, stackedPlayers]);
+  }, [betAmount, stackedPlayers]);
 
   const checkWinForCard = useCallback((id: number, currentMarked: Set<number>) => {
     const grid = allCardsData.current[id];
@@ -138,32 +139,34 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
   // Matchmaking Timer Sync with "At least 2 players" requirement
   useEffect(() => {
     if (gameState === 'matchmaking') {
-      const initialRemaining = getRemainingTime();
-      setCountdown(initialRemaining);
-
       const timer = setInterval(() => {
-        const remaining = getRemainingTime();
-        setCountdown(remaining);
-        
-        // Simulate players joining the stack
+        // Simulate players joining the stack (Adding entries/cards)
         const roll = Math.random();
-        if (stackedPlayersRef.current < 2 && roll > 0.8) {
+        // If total cards < 2, aggressively add players
+        if (stackedPlayersRef.current < APP_CONFIG.GAME.MIN_PLAYERS_TO_START && roll > 0.8) {
           stackedPlayersRef.current += 1;
           setStackedPlayers(stackedPlayersRef.current);
-        } else if (stackedPlayersRef.current >= 2 && stackedPlayersRef.current < 400 && roll > 0.6) {
+        } else if (stackedPlayersRef.current >= APP_CONFIG.GAME.MIN_PLAYERS_TO_START && stackedPlayersRef.current < 400 && roll > 0.6) {
           stackedPlayersRef.current += Math.floor(Math.random() * 3) + 1;
           setStackedPlayers(stackedPlayersRef.current);
         }
 
-        // CRITICAL: Match only starts if time is up AND at least 2 players are stacked
-        if (remaining <= 0 && stackedPlayersRef.current >= APP_CONFIG.GAME.MIN_PLAYERS_TO_START) {
-          clearInterval(timer);
-          setGameState('playing');
+        // Timer Logic: Only count down if we have enough players
+        if (stackedPlayersRef.current >= APP_CONFIG.GAME.MIN_PLAYERS_TO_START) {
+           setCountdown(prev => {
+              const nextTime = prev - 1;
+              if (nextTime <= 0) {
+                 clearInterval(timer);
+                 setGameState('playing');
+                 return 0;
+              }
+              return nextTime;
+           });
         }
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gameState, getRemainingTime]);
+  }, [gameState]);
 
   // Auto-Play Logic
   useEffect(() => {
@@ -261,8 +264,9 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
                 <span className={`text-[28px] font-black tabular-nums leading-none ${countdown <= 0 ? 'text-hb-emerald' : 'text-hb-gold'}`}>{countdown}s</span>
               </div>
               <div className={`p-4 rounded-3xl border flex flex-col items-center transition-all shadow-inner ${stackedPlayers < 2 ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
-                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${stackedPlayers < 2 ? 'text-red-400' : 'text-hb-blue'}`}>Players Stacked</span>
+                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${stackedPlayers < 2 ? 'text-red-400' : 'text-hb-blue'}`}>Live Players</span>
                 <span className={`text-[28px] font-black tabular-nums leading-none ${stackedPlayers < 2 ? 'text-red-600' : 'text-hb-blue'}`}>{stackedPlayers}</span>
+                <span className="text-[8px] font-bold opacity-60 uppercase tracking-wide mt-1">(Cards Stacked)</span>
               </div>
             </div>
 
@@ -319,7 +323,7 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
               </span>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[8px] font-black text-hb-muted uppercase tracking-tighter bg-slate-100 px-2 py-0.5 rounded-full">
-                  {stackedPlayers} Competitors
+                  {stackedPlayers} Live Players (Cards)
                 </span>
               </div>
             </div>

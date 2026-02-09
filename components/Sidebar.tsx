@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { View, Language, User } from '../types';
+import { APP_CONFIG } from '../config';
 
 interface SidebarProps {
   user: User;
@@ -16,13 +17,17 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onClose, onNavigate, currentLan
     <div className="fixed inset-0 z-50 flex">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
       <div className="relative w-80 h-full bg-hb-surface shadow-[25px_0_50px_-12px_rgba(0,0,0,0.5)] flex flex-col slide-in-left border-r border-hb-border">
-        <div className="bg-[#121212] p-10 text-white relative overflow-hidden border-b border-hb-border">
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="w-24 h-24 rounded-[2rem] bg-hb-surface p-1.5 mb-5 shadow-inner border border-hb-border">
-              <img src={user.photo} className="w-full h-full rounded-[1.8rem] object-cover" alt="pfp" />
+        <div className="bg-[#121212] p-10 text-white relative overflow-hidden border-b border-hb-border flex flex-col items-center">
+          <div className="relative z-10 flex flex-col items-center w-full">
+            
+            {/* Logo added to sidebar */}
+            <img src={APP_CONFIG.ASSETS.LOGO_URL} className="w-16 h-16 object-contain mb-4 rounded-full bg-white/5 p-1 border border-white/10" alt="App Logo" />
+
+            <div className="w-20 h-20 rounded-[1.5rem] bg-hb-surface p-1 mb-3 shadow-inner border border-hb-border">
+              <img src={user.photo} className="w-full h-full rounded-[1.3rem] object-cover" alt="pfp" />
             </div>
-            <div className="font-black text-xl tracking-tight italic uppercase text-hb-gold truncate w-full text-center">{user.username}</div>
-            <div className="text-[11px] font-black uppercase opacity-60 tracking-widest mt-1 flex items-center gap-1">
+            <div className="font-black text-lg tracking-tight italic uppercase text-hb-gold truncate w-full text-center">{user.username}</div>
+            <div className="text-[10px] font-black uppercase opacity-60 tracking-widest mt-1 flex items-center gap-1">
               <i className="fas fa-wallet text-[9px]"></i> {user.balance.toLocaleString()} ETB
             </div>
           </div>

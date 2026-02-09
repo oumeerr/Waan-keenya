@@ -5,6 +5,9 @@
  */
 
 export const APP_CONFIG = {
+  ASSETS: {
+    LOGO_URL: '/logo.png',
+  },
   GAME: {
     MATCHMAKING_SECONDS: 60, // Each round window is 60 seconds
     GLOBAL_ROUND_INTERVAL_MS: 60000, // Sync every 1 minute
@@ -20,7 +23,7 @@ export const APP_CONFIG = {
     WITHDRAWAL_END_HOUR: 18,  // 6 PM
     MIN_WITHDRAWAL_ETB: 100,
     DEPOSIT_PHONES: {
-      STANDARD: ["0939814648", "0909565353"], // Telebirr & CBE
+      STANDARD: ["0939814648", "0950832537"], // Telebirr & CBE
       MERCHANT: ["0928157002"] // Ebirr & Kacha
     },
     TRANSFER_FEE_PERCENT: 0.05, // 5% P2P transfer charge

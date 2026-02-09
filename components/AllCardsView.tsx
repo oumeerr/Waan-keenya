@@ -18,23 +18,23 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
   }, [mode]);
 
   return (
-    <div className="min-h-full bg-hb-bg pb-20">
+    <div className="min-h-full pb-20">
       {/* Minimized Header */}
-      <div className="sticky top-0 z-20 bg-hb-bg/90 backdrop-blur-md border-b border-hb-border px-3 py-2">
+      <div className="sticky top-0 z-20 bg-hb-surface/90 backdrop-blur-md border-b border-hb-border/50 px-3 py-2 shadow-lg">
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
-            <h2 className="text-[12px] font-black text-hb-navy uppercase tracking-tight">Gallery</h2>
+            <h2 className="text-[12px] font-black text-white uppercase tracking-tight">Gallery</h2>
           </div>
-          <div className="flex bg-slate-100 p-0.5 rounded-lg shrink-0">
+          <div className="flex bg-hb-navy/50 p-0.5 rounded-lg shrink-0 border border-hb-border/30">
              <button 
                onClick={() => setMode('classic')}
-               className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase transition-all ${mode === 'classic' ? 'bg-white text-hb-blue shadow-sm' : 'text-hb-muted'}`}
+               className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase transition-all ${mode === 'classic' ? 'bg-hb-gold text-hb-blueblack shadow-sm' : 'text-hb-muted'}`}
              >
                Classic
              </button>
              <button 
                onClick={() => setMode('mini')}
-               className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase transition-all ${mode === 'mini' ? 'bg-white text-hb-gold shadow-sm' : 'text-hb-muted'}`}
+               className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase transition-all ${mode === 'mini' ? 'bg-hb-blue text-white shadow-sm' : 'text-hb-muted'}`}
              >
                Mini
              </button>
@@ -44,7 +44,7 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
              <input 
                type="number" 
                placeholder="1-400..." 
-               className="w-full h-7 pl-6 pr-2 bg-white border border-hb-border rounded-lg text-[9px] font-bold outline-none focus:border-hb-blue/30"
+               className="w-full h-7 pl-6 pr-2 bg-hb-navy/50 border border-hb-border rounded-lg text-[9px] font-bold outline-none focus:border-hb-gold/50 text-white placeholder-hb-muted"
                onChange={(e) => {
                  const val = e.target.value;
                  if (val) {
@@ -63,14 +63,14 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
           <div 
             key={card.id} 
             id={`card-anchor-${card.id}`}
-            className="bg-white rounded-xl border border-hb-border shadow-sm p-1.5 hover:shadow-md transition-shadow active:scale-[0.98] flex flex-col"
+            className="bg-white/90 rounded-xl border border-hb-border/20 shadow-sm p-1.5 hover:shadow-md transition-shadow active:scale-[0.98] flex flex-col"
             onClick={() => onQuickPlay(card.id, mode)}
           >
             <div className="flex justify-between items-center mb-1 px-0.5">
-               <span className="text-hb-navy font-black text-[9px] opacity-60">
+               <span className="text-hb-navy font-black text-[9px] opacity-80">
                  #{card.id}
                </span>
-               <i className="fas fa-play text-hb-blue/20 text-[7px]"></i>
+               <i className="fas fa-play text-hb-blue/40 text-[7px]"></i>
             </div>
 
             <div className={`grid ${mode === 'mini' ? 'grid-cols-3' : 'grid-cols-5'} gap-0.5`}>
@@ -78,7 +78,7 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
                 <div 
                   key={i} 
                   className={`aspect-square text-[8px] font-extrabold flex items-center justify-center rounded-[2px] border border-hb-border/20
-                    ${num === 0 ? 'bg-hb-emerald/10 text-hb-emerald' : 'bg-[#1E1E1E] text-white border-white/5'}`}
+                    ${num === 0 ? 'bg-hb-emerald/20 text-hb-emerald' : 'bg-[#1E1E1E] text-white border-white/5'}`}
                 >
                   {num === 0 ? '★' : num}
                 </div>
@@ -88,8 +88,8 @@ const AllCardsView: React.FC<AllCardsViewProps> = ({ onQuickPlay }) => {
         ))}
       </div>
 
-      <div className="text-center py-4 opacity-10">
-        <p className="text-[7px] font-black uppercase tracking-[0.3em]">Full Deck (400) Displayed</p>
+      <div className="text-center py-4 opacity-30">
+        <p className="text-[7px] font-black uppercase tracking-[0.3em] text-white">Full Deck (400) Displayed</p>
       </div>
     </div>
   );

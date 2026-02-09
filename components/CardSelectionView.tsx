@@ -33,6 +33,8 @@ const CardSelectionView: React.FC<CardSelectionViewProps> = ({ betAmount, mode, 
   };
 
   const totalStake = selectedIds.size * betAmount;
+  // Calculate Possible Win: Total Stake - 20% House Fee
+  const possibleWin = Math.floor(totalStake * (1 - APP_CONFIG.GAME.HOUSE_FEE_PERCENT));
 
   return (
     <div className="p-4 pb-28">
@@ -111,20 +113,28 @@ const CardSelectionView: React.FC<CardSelectionViewProps> = ({ betAmount, mode, 
         </div>
       )}
 
-      {/* Floating Action Bar */}
+      {/* Floating Action Bar with Possible Win Calculation */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[320px] px-4 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[340px] px-4 animate-in slide-in-from-bottom-4">
           <button 
             onClick={() => onSelectCard(Array.from(selectedIds))}
-            className="w-full h-14 bg-hb-blueblack text-white px-5 rounded-2xl shadow-xl flex items-center justify-between group active:scale-[0.98] transition-all border border-white/10"
+            className="w-full h-16 bg-hb-blueblack text-white px-4 rounded-2xl shadow-xl flex items-center justify-between group active:scale-[0.98] transition-all border border-white/10"
           >
-            <div className="text-left">
-              <div className="text-[14px] font-black text-hb-gold leading-none">{totalStake.toLocaleString()} <span className="text-[10px]">ETB</span></div>
-              <div className="text-[8px] font-black uppercase opacity-60 tracking-widest mt-0.5">Total Stake</div>
+            <div className="flex items-center gap-4">
+              <div className="text-left">
+                <div className="text-[10px] font-black uppercase text-hb-muted tracking-widest">Pay</div>
+                <div className="text-[15px] font-black text-white leading-none">{totalStake.toLocaleString()} <span className="text-[10px] text-hb-gold">ETB</span></div>
+              </div>
+              <div className="w-px h-8 bg-white/10"></div>
+              <div className="text-left">
+                <div className="text-[10px] font-black uppercase text-hb-muted tracking-widest">Possible Win</div>
+                <div className="text-[15px] font-black text-hb-emerald leading-none">{possibleWin.toLocaleString()} <span className="text-[10px]">ETB</span></div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase">Enter Arena</span>
-              <i className="fas fa-arrow-right text-[10px]"></i>
+            
+            <div className="flex items-center gap-2 bg-hb-gold/10 px-3 py-1.5 rounded-lg border border-hb-gold/20">
+              <span className="text-[10px] font-black uppercase text-hb-gold">PLAY</span>
+              <i className="fas fa-arrow-right text-[10px] text-hb-gold"></i>
             </div>
           </button>
         </div>

@@ -19,10 +19,10 @@ interface MethodButtonProps {
   logoUrl: string;
 }
 
-// Hosted logos for Ethiopian Payment Providers (using high-availability public URLs)
+// Updated Logos for Ethiopian Payment Providers
 const LOGOS = {
   telebirr: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/4a/6c/2e/4a6c2e37-122e-130f-2169-2810c9d94944/AppIcon-0-0-1x_U007emarketing-0-5-0-85-220.png/512x512bb.jpg",
-  cbe: "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/f2/86/81/f286810c-300c-7703-e820-221614972e25/AppIcon-0-0-1x_U007emarketing-0-0-0-7-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/512x512bb.jpg",
+  cbe: "https://is1-ssl.mzstatic.com/image/thumb/Purple112/v4/64/4f/50/644f5062-8186-0683-1629-940342935266/AppIcon-0-0-1x_U007emarketing-0-7-0-85-220.png/512x512bb.jpg", // Specific CBE Birr App Icon
   ebirr: "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/7e/1c/64/7e1c641f-1339-930c-529d-473133874313/AppIcon-1x_U007emarketing-0-7-0-85-220.png/512x512bb.jpg",
   kacha: "https://pbs.twimg.com/profile_images/1542866598379438081/Hj3x-k-9_400x400.jpg"
 };
@@ -88,6 +88,33 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
     setAccountNumber('');
     setAccountHolder('');
   }, [activeTab]);
+
+  // Subscribe to Profile Balance Updates (Real-time)
+  useEffect(() => {
+    if (user.id === 'guest') return;
+
+    const channel = supabase
+      .channel('wallet_balance_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new && typeof payload.new.balance === 'number') {
+            setUser(prev => ({ ...prev, balance: payload.new.balance }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id, setUser]);
 
   useEffect(() => {
     if (user.id === 'guest') return;
@@ -176,17 +203,20 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
 
       alert(data.message || "Transaction processed successfully");
 
-      // Optimistic UI Updates
-      if (type === 'withdraw') {
-        setUser(prev => ({ ...prev, balance: prev.balance - val }));
-      } else if (type === 'transfer') {
-        const fee = val * APP_CONFIG.WALLET.TRANSFER_FEE_PERCENT;
-        setUser(prev => ({ ...prev, balance: prev.balance - (val + fee) }));
-      }
-
-      // Refresh Histories
+      // Immediate Sync: Fetch latest profile data from server to ensure balance accuracy
       if (user.id !== 'guest') {
-         if (type === 'deposit') {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('balance')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileData) {
+          setUser(prev => ({ ...prev, balance: profileData.balance }));
+        }
+
+        // Refresh Histories
+        if (type === 'deposit') {
            const { data: newData } = await supabase
             .from('transactions')
             .select('*')
@@ -271,7 +301,7 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
               <div className="flex items-center justify-center gap-2">
                 <img src={LOGOS[selectedMethod]} className="w-6 h-6 rounded-md object-cover bg-white" alt="Selected" />
                 <h3 className="font-bold text-white text-[16px] uppercase tracking-tight">
-                  Deposit via {selectedMethod === 'cbe' ? 'CBE' : selectedMethod.charAt(0).toUpperCase() + selectedMethod.slice(1)}
+                  Deposit via {selectedMethod === 'cbe' ? 'CBE Birr' : selectedMethod === 'ebirr' ? 'E-Birr' : selectedMethod.charAt(0).toUpperCase() + selectedMethod.slice(1)}
                 </h3>
               </div>
               <p className="text-[12px] text-hb-muted font-medium">Send (Min 30 ETB) to merchant:</p>

@@ -1,5 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import { APP_CONFIG } from '../config';
 
 interface Message {
   role: 'user' | 'model';
@@ -90,8 +92,8 @@ const PaymentProofView: React.FC = () => {
           <div className="bg-gradient-to-br from-hb-surface to-[#121212] p-8 rounded-[2rem] border border-hb-border text-white shadow-xl mb-6 relative overflow-hidden">
              <div className="relative z-10">
                <div className="flex items-center gap-3 mb-2">
-                 {/* New App Logo in Header */}
-                 <img src="/logo.png" className="w-10 h-10 rounded-full bg-white object-contain border-2 border-white shadow-md" alt="Logo" />
+                 {/* Logo from Config */}
+                 <img src={APP_CONFIG.ASSETS.LOGO_URL} className="w-10 h-10 rounded-full bg-white object-contain border-2 border-white shadow-md" alt="Logo" />
                  <h2 className="text-xl font-black italic uppercase">Verification</h2>
                </div>
                <p className="text-[11px] text-hb-muted font-bold leading-relaxed">

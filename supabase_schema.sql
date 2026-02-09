@@ -145,6 +145,10 @@ declare
   v_recipient_id uuid;
   v_fee numeric := 0;
   v_total_deduction numeric;
+  
+  -- New variables for checking wins after first deposit
+  v_first_deposit_at timestamp with time zone;
+  v_wins_after_deposit int;
 begin
   v_user_id := auth.uid();
   
@@ -168,12 +172,34 @@ begin
     return jsonb_build_object('status', 'success', 'message', 'Deposit pending verification');
   end if;
 
+  -- === WITHDRAWAL & TRANSFER RESTRICTION ===
+  -- Rule: User must win at least 1 game AFTER their first completed deposit.
+  if p_type in ('withdraw', 'transfer') then
+     -- Find the first completed deposit
+     select min(created_at) into v_first_deposit_at
+     from transactions
+     where user_id = v_user_id
+       and type = 'deposit'
+       and status = 'completed';
+       
+     if v_first_deposit_at is null then
+        raise exception 'You must make a deposit before performing this action.';
+     end if;
+     
+     -- Check for at least 1 win AFTER that deposit
+     select count(*) into v_wins_after_deposit
+     from game_history
+     where user_id = v_user_id
+       and status = 'won'
+       and created_at > v_first_deposit_at;
+       
+     if v_wins_after_deposit < 1 then
+        raise exception 'You must win at least 1 game after your first deposit to proceed.';
+     end if;
+  end if;
+
   -- === WITHDRAWAL LOGIC ===
   if p_type = 'withdraw' then
-    if v_wins < 3 then
-      raise exception 'You must win at least 3 games to withdraw.';
-    end if;
-
     if p_amount < 100 then
       raise exception 'Minimum withdrawal is 100 ETB';
     end if;
@@ -270,3 +296,16 @@ begin
   return jsonb_build_object('status', 'success', 'new_status', p_action);
 end;
 $$;
+
+-- 6. SYSTEM CONFIG (Stores app-wide settings like logo)
+create table if not exists public.system_config (
+  key text primary key,
+  value text not null
+);
+
+insert into public.system_config (key, value)
+values ('logo_url', '/logo.png')
+on conflict (key) do nothing;
+
+alter table public.system_config enable row level security;
+create policy "Public system config" on system_config for select using (true);
