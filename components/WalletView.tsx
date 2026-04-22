@@ -74,7 +74,6 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
   const [refId, setRefId] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('telebirr');
   const [recipientUsername, setRecipientUsername] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
   const [accountHolder, setAccountHolder] = useState('');
   const [loading, setLoading] = useState(false);
   const [depositHistory, setDepositHistory] = useState<any[]>([]);
@@ -85,7 +84,6 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
     setRefId('');
     setBank('');
     setRecipientUsername('');
-    setAccountNumber('');
     setAccountHolder('');
   }, [activeTab]);
 
@@ -174,7 +172,10 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
     
     if (type === 'withdraw') {
       if (val < 100) return alert("Minimum withdrawal is 100 ETB");
-      if (!bank || !accountNumber || !accountHolder) return alert("Please complete all bank details");
+      if (!bank) return alert("Please select a withdrawal method");
+      if (!user.mobile || user.mobile === 'Pending_Bot_Sync' || user.mobile === 'Guest') {
+        return alert("Please wait for your Telegram phone number to sync before withdrawing.");
+      }
     }
 
     if (type === 'transfer') {
@@ -187,7 +188,7 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
     try {
       // Prepare Metadata based on type
       const metadata = type === 'withdraw' 
-        ? { bank, accountNumber, accountHolder } 
+        ? { bank, accountNumber: user.mobile, accountHolder: user.username } 
         : type === 'deposit' 
           ? { method: selectedMethod, refId } 
           : {};
@@ -241,12 +242,15 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
       setAmount('');
       setRefId('');
       setRecipientUsername('');
-      setAccountNumber('');
       setAccountHolder('');
 
     } catch (error: any) {
       console.error("Transaction Error:", error);
-      alert(error.message || "Transaction failed");
+      if (error.message === 'Failed to fetch' || error.message?.includes('Failed to fetch')) {
+        console.warn("Network error: Supabase unreachable. Please check your internet connection.");
+      } else {
+        alert(error.message || "Transaction failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -413,30 +417,9 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
                   value={bank} onChange={e => setBank(e.target.value)}
                 >
                   <option value="">Select Bank/Wallet...</option>
-                  {ETHIOPIAN_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+                  {['Telebirr', 'CBE Birr', 'Kacha', 'M-Pesa'].map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-hb-muted ml-1">Account Number</label>
-                <input 
-                  type="text" 
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder="e.g. 1000..."
-                  className="w-full input-human"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-hb-muted ml-1">Full Name</label>
-                <input 
-                  type="text" 
-                  value={accountHolder}
-                  onChange={(e) => setAccountHolder(e.target.value)}
-                  placeholder="Full Name"
-                  className="w-full input-human"
-                />
+                <p className="text-[10px] text-hb-emerald mt-2 px-1 font-medium text-center">Withdrawals are securely forwarded to the phone number on your Telegram account.</p>
               </div>
 
               <button 

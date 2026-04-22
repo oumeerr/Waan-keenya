@@ -17,6 +17,7 @@ import PromoGenerator from './components/PromoGenerator';
 import SettingsView from './components/SettingsView';
 import AllCardsView from './components/AllCardsView';
 import PaymentProofView from './components/PaymentProofView';
+import RegisterView from './components/RegisterView';
 import { APP_CONFIG } from './config';
 
 const App: React.FC = () => {
@@ -30,6 +31,7 @@ const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<'classic' | 'mini'>('classic');
   const [isGameActive, setIsGameActive] = useState(false);
   const [matchStartTime, setMatchStartTime] = useState<number | null>(null);
+  const [needsRegistration, setNeedsRegistration] = useState(false);
 
   // Default mock user
   const [user, setUser] = useState<User>({
@@ -94,108 +96,103 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initApp = async () => {
-      // 1. Initialize Telegram WebApp
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg) {
-        tg.ready();
-        tg.expand();
-        try { tg.setHeaderColor('#1E1B4B'); } catch(e) {}
-      }
+      try {
+        // 1. Initialize Telegram WebApp
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg) {
+          tg.ready();
+          tg.expand();
+          try { tg.setHeaderColor('#1E1B4B'); } catch(e) {}
+        }
 
-      // 2. Check for existing session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        await loadUserProfile(session.user);
-        setIsAuthenticated(true);
-        setIsInitializing(false);
-        return;
-      }
+        // 2. Check for existing session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        
+        if (session) {
+          await loadUserProfile(session.user);
+          setIsAuthenticated(true);
+          setIsInitializing(false);
+          return;
+        }
 
-      // 3. Auto Login / Register
-      let userId = tg?.initDataUnsafe?.user?.id?.toString();
-      
-      // Fallback for browser/dev: Create or retrieve a persistent guest ID
-      if (!userId) {
-        userId = localStorage.getItem('hb_guest_id');
+        // 3. Auto Login / Register
+        let userId = tg?.initDataUnsafe?.user?.id?.toString();
+        
+        // Fallback for browser/dev: Create or retrieve a persistent guest ID
         if (!userId) {
-          userId = Math.random().toString(36).substring(2, 15);
-          localStorage.setItem('hb_guest_id', userId);
-        }
-      }
-
-      // Deterministic credentials based on ID (for legacy/guest auth)
-      const email = `${userId}@hulumbingo.com`;
-      const password = `hb_secret_${userId}`; 
-
-      // Attempt Quick Sign In (Client Side)
-      const { data: signInData } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (signInData.session) {
-        await loadUserProfile(signInData.session.user);
-        setIsAuthenticated(true);
-      } else {
-        // User not found, need to register.
-        let isSecureAuthSuccessful = false;
-
-        // A. Try Secure Registration via Edge Function (Preferred for Telegram Users)
-        if (tg?.initData) {
-          try {
-            console.log("Attempting secure registration via Edge Function...");
-            const { data, error } = await supabase.functions.invoke('auth-user', {
-              body: { tg_data: tg.initData }
-            });
-
-            if (!error && data?.session) {
-               const { data: authData } = await supabase.auth.setSession(data.session);
-               if (authData.session) {
-                 await loadUserProfile(authData.session.user);
-                 setIsAuthenticated(true);
-                 isSecureAuthSuccessful = true;
-               }
-            } else {
-               console.log("Edge function auth response invalid or failed", error);
-            }
-          } catch (err) {
-            console.warn("Secure auth edge function unreachable, using fallback.", err);
+          userId = localStorage.getItem('hb_guest_id');
+          if (!userId) {
+            userId = Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('hb_guest_id', userId);
           }
         }
 
-        // B. Fallback: Client-Side Registration (Guest / Dev Mode)
-        if (!isSecureAuthSuccessful) {
-          console.log("Using client-side registration fallback...");
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                username: tg?.initDataUnsafe?.user?.first_name || `Player_${userId?.substring(0,4)}`,
-                mobile: 'Verified',
-                avatar_url: tg?.initDataUnsafe?.user?.photo_url,
-                balance: 20
+        // Deterministic credentials based on ID (for legacy/guest auth)
+        const email = `${userId}@hulumbingo.com`;
+        const password = `hb_secret_${userId}`; 
+
+        // Attempt Quick Sign In (Client Side)
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        // Supabase sometimes returns network errors in signInError
+        if (signInError) {
+          if (signInError.message.includes('Failed to fetch')) {
+            throw signInError; // pass to outer catch
+          }
+          // Otherwise maybe user not found, so continue to register
+        }
+
+        if (signInData?.session) {
+          await loadUserProfile(signInData.session.user);
+          setIsAuthenticated(true);
+        } else {
+          // User not found, need to register.
+          let isSecureAuthSuccessful = false;
+
+          // A. Try Secure Registration via Edge Function (Preferred for Telegram Users)
+          if (tg?.initData) {
+            try {
+              console.log("Attempting secure registration via Edge Function...");
+              const { data, error } = await supabase.functions.invoke('auth-user', {
+                body: { tg_data: tg.initData }
+              });
+
+              if (!error && data?.session) {
+                 const { data: authData } = await supabase.auth.setSession(data.session);
+                 if (authData.session) {
+                   await loadUserProfile(authData.session.user);
+                   setIsAuthenticated(true);
+                   isSecureAuthSuccessful = true;
+                 }
+              } else {
+                 console.log("Edge function auth response invalid or failed", error);
               }
+            } catch (err) {
+              console.warn("Secure auth edge function unreachable, using fallback.", err);
             }
-          });
+          }
 
-          if (signUpData.session) {
-             await loadUserProfile(signUpData.session.user);
-             setIsAuthenticated(true);
-          } else {
-             // Absolute Fallback: Continue as Guest (No Auth)
-             console.warn("Auth failed completely, continuing as guest UI", signUpError);
-             setUser(prev => ({
-               ...prev,
-               username: tg?.initDataUnsafe?.user?.first_name || 'Guest',
-               photo: tg?.initDataUnsafe?.user?.photo_url || prev.photo
-             }));
-             setIsAuthenticated(true);
+          // B. Show Registration View instead of Auto-Registering
+          if (!isSecureAuthSuccessful) {
+            console.log("No existing user found, showing registration view...");
+            setNeedsRegistration(true);
           }
         }
+        setIsInitializing(false);
+      } catch (error: any) {
+        console.error("Critical Boot Error:", error);
+        if (error.message === 'Failed to fetch' || error.message?.includes('Failed to fetch')) {
+          console.warn("Network error: Supabase unreachable. Falling back to offline mode.");
+        }
+        setIsInitializing(false); // Stop loading so UI can show something
+        // Optionally put them in a guest mode
+        setUser(prev => ({ ...prev, id: 'guest', username: 'Guest (Offline)'}));
+        setIsAuthenticated(true);
       }
-      setIsInitializing(false);
     };
 
     initApp();
@@ -209,6 +206,60 @@ const App: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleRegister = async (method: string, defaultName: string) => {
+    setIsInitializing(true);
+    const tg = (window as any).Telegram?.WebApp;
+    let userId = tg?.initDataUnsafe?.user?.id?.toString() || localStorage.getItem('hb_guest_id');
+    const email = `${userId}@hulumbingo.com`;
+    const password = `hb_secret_${userId}`; 
+    
+    try {
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: defaultName || tg?.initDataUnsafe?.user?.first_name || `Player_${userId?.substring(0,4)}`,
+            mobile: method === 'Shared_via_Telegram' ? 'Pending_Bot_Sync' : 'Guest',
+            avatar_url: tg?.initDataUnsafe?.user?.photo_url || '',
+            balance: 20
+          }
+        }
+      });
+      
+      if (signUpError) {
+         if (signUpError.message.includes('Failed to fetch')) throw signUpError;
+      }
+
+      if (signUpData?.session) {
+         await loadUserProfile(signUpData.session.user);
+         setIsAuthenticated(true);
+         setNeedsRegistration(false);
+      } else {
+         console.warn("Auth failed completely", signUpError);
+         setUser(prev => ({
+           ...prev,
+           username: defaultName || 'Guest',
+         }));
+         setIsAuthenticated(true);
+         setNeedsRegistration(false);
+      }
+    } catch (e: any) {
+      console.error("Registration error:", e);
+      if (e.message === 'Failed to fetch' || e.message?.includes('Failed to fetch')) {
+        console.warn("Network error: Supabase unreachable. Registration failed, using guest mode.");
+      }
+      setUser(prev => ({
+        ...prev,
+        username: defaultName || 'Guest (Offline)',
+      }));
+      setIsAuthenticated(true);
+      setNeedsRegistration(false);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   const currentView = viewStack[viewStack.length - 1];
   const t = (key: string) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
@@ -269,10 +320,14 @@ const App: React.FC = () => {
                  <span className="absolute inset-0 flex items-center justify-center text-hb-navy font-black text-2xl italic" style={{ display: 'none' }}>BB</span>
              </div>
              <h1 className="text-xl font-black italic tracking-tighter uppercase mb-2 text-hb-gold drop-shadow-lg">Beteseb Bet</h1>
-             <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-hb-muted animate-pulse">Entering Arena...</div>
+             <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-hb-muted animate-pulse">Starting Bingo...</div>
           </div>
        </div>
      );
+  }
+
+  if (needsRegistration) {
+    return <RegisterView onRegister={handleRegister} />;
   }
 
   return (
@@ -294,7 +349,7 @@ const App: React.FC = () => {
             <div className="flex flex-col items-center gap-1.5 flex-1">
               <span className="font-black text-xl italic tracking-tighter text-white drop-shadow-md">BETESEB BET BINGO</span>
               <div className="bg-hb-gold text-hb-blueblack px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter shadow-sm">
-                Live Multiplayer Arena
+                Live Bingo Session
               </div>
             </div>
             <div className="flex flex-col items-end w-12 min-w-[85px]">

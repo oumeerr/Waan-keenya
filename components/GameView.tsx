@@ -251,9 +251,9 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
             <div className="flex items-center gap-4 mb-8">
                <div className={`w-12 h-12 border-[5px] rounded-full animate-spin transition-all duration-500 ${stackedPlayers < 2 ? 'border-red-500 border-t-transparent' : 'border-hb-blue border-t-hb-gold'}`}></div>
                <div className="text-left">
-                  <h3 className="text-[18px] font-black text-hb-navy uppercase tracking-tight leading-none italic">Arena Matchmaking</h3>
+                  <h3 className="text-[18px] font-black text-hb-navy uppercase tracking-tight leading-none italic">Bingo Initialization</h3>
                   <p className={`text-[10px] font-black uppercase mt-1.5 tracking-widest ${stackedPlayers < 2 ? 'text-red-500 animate-pulse' : 'text-hb-emerald'}`}>
-                    {stackedPlayers < 2 ? '⚠️ Waiting for Opponents' : '✅ Match Ready to Start'}
+                    {stackedPlayers < 2 ? '⚠️ Waiting for 2 Cards by Different IDs' : '✅ Match Ready to Start'}
                   </p>
                </div>
             </div>
@@ -279,7 +279,7 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
             <div className="flex items-center gap-2 mb-2">
                <i className={`fas ${stackedPlayers < 2 ? 'fa-user-clock text-red-400' : 'fa-users text-hb-emerald'}`}></i>
                <p className="text-[10px] font-black text-hb-muted uppercase tracking-[0.1em]">
-                 {stackedPlayers < 2 ? 'Need 1 more player to unlock arena' : 'Global Pool Active • Ready to roll'}
+                 {stackedPlayers < 2 ? 'Syncing starts when 2 cards are confirmed by different player IDs' : 'Global Pool Active • Ready to roll'}
                </p>
             </div>
           </div>
@@ -317,7 +317,7 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
         <div className="w-full max-w-[440px] animate-in slide-in-from-bottom-5 duration-500 px-3">
           <div className="flex justify-between items-center mb-6 bg-white px-6 py-5 rounded-[2.5rem] shadow-xl border border-hb-border/10">
             <div className="flex flex-col">
-              <span className="text-[10px] font-black text-hb-muted uppercase tracking-widest mb-1.5">Live Arena Pot</span>
+              <span className="text-[10px] font-black text-hb-muted uppercase tracking-widest mb-1.5">Live Bingo Pot</span>
               <span className="text-[26px] font-black text-hb-emerald leading-none tracking-tighter">
                 {sessionPot.toLocaleString()} <span className="text-[14px] opacity-60 ml-0.5">ETB</span>
               </span>
@@ -351,7 +351,7 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
                     <div className="w-3 h-3 bg-hb-gold rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                     <div className="w-3 h-3 bg-hb-gold rounded-full animate-bounce"></div>
                   </div>
-                  <span className="text-hb-muted italic text-[14px] uppercase tracking-[0.3em] font-black opacity-30">Seeding Arena Feed...</span>
+                  <span className="text-hb-muted italic text-[14px] uppercase tracking-[0.3em] font-black opacity-30">Syncing Draw Feed...</span>
                </div>
              )}
           </div>
@@ -422,7 +422,7 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
               <i className="fas fa-crown text-[24px]"></i>
               {isAutoPlay && isAnyWinning ? 'Processing...' : 'BINGO!'}
             </button>
-            <button onClick={handleLeaveMatch} className="text-[11px] font-black text-hb-muted uppercase tracking-[0.4em] hover:text-red-500 py-4 transition-colors">Surrender Arena</button>
+            <button onClick={handleLeaveMatch} className="text-[11px] font-black text-hb-muted uppercase tracking-[0.4em] hover:text-red-500 py-4 transition-colors">Abandon Match</button>
           </div>
         </div>
       )}
@@ -432,7 +432,7 @@ const GameView: React.FC<GameViewProps> = ({ cardIds, betAmount, mode, user, set
            <div className="w-36 h-36 mb-10 bg-gradient-to-br from-hb-gold to-orange-500 rounded-full flex items-center justify-center text-[64px] shadow-[0_0_60px_rgba(249,115,22,0.5)] relative border-4 border-white/20">
              {winner === user.username ? '🏆' : '💀'}
              <div className="absolute -top-5 -right-5 bg-white text-hb-navy text-[13px] font-black px-5 py-2 rounded-2xl border-4 border-hb-gold uppercase shadow-2xl">
-               {winner === user.username ? 'Arena King' : 'House Win'}
+               {winner === user.username ? 'Bingo King' : 'House Win'}
              </div>
            </div>
            

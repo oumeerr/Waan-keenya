@@ -3,5 +3,6 @@
   "description": "The first real-time multiplayer Bingo experience in Ethiopia! Join thousands of players, win daily prizes, and enjoy seamless deposits via Telebirr and CBE Birr.",
   "requestFramePermissions": [
     "camera"
-  ]
+  ],
+  "majorCapabilities": []
 }

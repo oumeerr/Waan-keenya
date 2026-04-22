@@ -42,7 +42,7 @@ const CardSelectionView: React.FC<CardSelectionViewProps> = ({ betAmount, mode, 
       <div className="bg-hb-navy p-5 rounded-[20px] text-white mb-4 shadow-md relative overflow-hidden">
         <div className="relative z-10">
           <h2 className="text-[16px] font-bold italic tracking-tight mb-2 uppercase">
-            {mode === 'mini' ? 'Mini Arena' : 'Classic Arena'}
+            {mode === 'mini' ? 'Mini Bingo' : 'Classic Bingo'}
           </h2>
           
           <div className="flex gap-2 items-center">

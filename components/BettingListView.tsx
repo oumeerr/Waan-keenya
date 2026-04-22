@@ -33,13 +33,13 @@ const BettingListView: React.FC<BettingListViewProps> = ({ mode, onModeChange, o
              <i className="fas fa-clock text-hb-gold animate-pulse"></i>
            </div>
            <div>
-             <span className="text-[10px] font-black text-hb-muted uppercase tracking-widest block mb-0.5">Next Live Arena</span>
-             <span className="text-[18px] font-black text-white italic">ROUND STARTING</span>
+             <span className="text-[10px] font-black text-hb-muted uppercase tracking-widest block mb-0.5">Live Bingo Network</span>
+             <span className="text-[14px] font-black text-white italic">WAITING FOR 2+ IDS</span>
            </div>
          </div>
          <div className="bg-hb-navy px-5 py-2 rounded-2xl border border-hb-border flex flex-col items-center min-w-[80px]">
            <span className="text-[16px] font-black text-hb-gold tabular-nums leading-none">{globalCountdown}s</span>
-           <span className="text-[8px] font-black text-hb-muted uppercase tracking-tighter mt-1">Syncing...</span>
+           <span className="text-[8px] font-black text-hb-muted uppercase tracking-tighter mt-1">Starts on 2+</span>
          </div>
       </div>
 
