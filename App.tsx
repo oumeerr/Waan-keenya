@@ -190,14 +190,14 @@ const App: React.FC = () => {
         }
         setIsInitializing(false); // Stop loading so UI can show something
         // Optionally put them in a guest mode
-        setUser(prev => ({ ...prev, id: 'guest', username: 'Guest (Offline)'}));
+        setUser((prev: User) => ({ ...prev, id: 'guest', username: 'Guest (Offline)'}));
         setIsAuthenticated(true);
       }
     };
 
     initApp();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
       if (session) {
         setIsAuthenticated(true);
         loadUserProfile(session.user);
@@ -238,7 +238,7 @@ const App: React.FC = () => {
          setNeedsRegistration(false);
       } else {
          console.warn("Auth failed completely", signUpError);
-         setUser(prev => ({
+         setUser((prev: User) => ({
            ...prev,
            username: defaultName || 'Guest',
          }));
@@ -250,7 +250,7 @@ const App: React.FC = () => {
       if (e.message === 'Failed to fetch' || e.message?.includes('Failed to fetch')) {
         console.warn("Network error: Supabase unreachable. Registration failed, using guest mode.");
       }
-      setUser(prev => ({
+      setUser((prev: User) => ({
         ...prev,
         username: defaultName || 'Guest (Offline)',
       }));
@@ -269,13 +269,13 @@ const App: React.FC = () => {
       if (view === 'home') setViewStack(['home']);
       else setViewStack(['home', view]);
     } else {
-      setViewStack(prev => [...prev, view]);
+      setViewStack((prev: View[]) => [...prev, view]);
     }
     setSidebarOpen(false);
   };
 
   const goBack = () => {
-    if (viewStack.length > 1) setViewStack(prev => prev.slice(0, -1));
+    if (viewStack.length > 1) setViewStack((prev: View[]) => prev.slice(0, -1));
   };
 
   const handleLogout = async () => {
@@ -298,7 +298,7 @@ const App: React.FC = () => {
     
     // Deduct balance
     const newBalance = user.balance - totalStake;
-    setUser(prev => ({ ...prev, balance: newBalance }));
+    setUser((prev: User) => ({ ...prev, balance: newBalance }));
     if (user.id !== 'guest') {
        await supabase.from('profiles').update({ balance: newBalance }).eq('id', user.id);
     }
@@ -370,8 +370,8 @@ const App: React.FC = () => {
           {currentView === 'history' && <HistoryView user={user} />}
           {currentView === 'profile' && <ProfileView user={user} setUser={setUser} />}
           {currentView === 'how-to-play' && <HowToPlayView />}
-          {currentView === 'all-cards' && <AllCardsView onQuickPlay={(id, m) => { setGameMode(m); setCurrentBet(50); setSelectedCardIds([id]); navigateTo('betting-list'); }} />}
-          {currentView === 'betting-list' && <BettingListView mode={gameMode} onModeChange={setGameMode} onSelectBet={(amt) => { setCurrentBet(amt); navigateTo('card-selection'); }} />}
+          {currentView === 'all-cards' && <AllCardsView onQuickPlay={(id: number, m: 'classic' | 'mini') => { setGameMode(m); setCurrentBet(50); setSelectedCardIds([id]); navigateTo('betting-list'); }} />}
+          {currentView === 'betting-list' && <BettingListView mode={gameMode} onModeChange={setGameMode} onSelectBet={(amt: number) => { setCurrentBet(amt); navigateTo('card-selection'); }} />}
           {currentView === 'card-selection' && <CardSelectionView betAmount={currentBet} mode={gameMode} onSelectCard={handleStartGame} />}
           {currentView === 'game' && selectedCardIds.length > 0 && matchStartTime !== null && (
             <GameView 
@@ -407,7 +407,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      {isSidebarOpen && <Sidebar user={user} currentLang={lang} onLangChange={setLang} onClose={() => setSidebarOpen(false)} onNavigate={(v) => navigateTo(v, true)} onLogout={handleLogout} />}
+      {isSidebarOpen && <Sidebar user={user} currentLang={lang} onLangChange={setLang} onClose={() => setSidebarOpen(false)} onNavigate={(v: View) => navigateTo(v, true)} onLogout={handleLogout} />}
     </div>
   );
 };
