@@ -1,0 +1,62 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient'; // Make sure your client is imported
+
+const WithdrawalPage = () => {
+    const [phone, setPhone] = useState(null);
+    const [amount, setAmount] = useState(0);
+    
+    // This gets the user ID from the Telegram Mini App SDK
+    const tgUserId = window.Telegram.WebApp.initDataUnsafe?.user?.id;
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            if (tgUserId) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('phone')
+                    .eq('id', tgUserId)
+                    .single();
+                
+                if (data) setPhone(data.phone);
+            }
+        };
+        fetchProfile();
+    }, [tgUserId]);
+
+    const handleWithdraw = async () => {
+        // SECURITY CHECK: If no phone in Supabase, stop the withdrawal
+        if (!phone) {
+            window.Telegram.WebApp.showAlert("❌ Verification Required: Please go back to the bot and click 'Verify Phone' before withdrawing.");
+            return;
+        }
+
+        if (amount < 100) {
+            alert("Minimum withdrawal is 100 ETB");
+            return;
+        }
+
+        // If phone exists, proceed to call your Python API
+        console.log("Processing withdrawal for verified phone:", phone);
+        // Add your fetch('/api/withdraw') call here
+    };
+
+    return (
+        <div className="withdraw-container">
+            <h2>Withdraw Funds</h2>
+            <input 
+                type="number" 
+                placeholder="Amount (Min 100)" 
+                onChange={(e) => setAmount(e.target.value)} 
+            />
+            
+            {/* Show user their verified number so they feel secure */}
+            <p style={{ color: phone ? 'green' : 'red' }}>
+                {phone ? `✅ Verified: ${phone}` : "⚠️ Phone not verified"}
+            </p>
+
+            <button onClick={handleWithdraw}>WITHDRAW FUNDS</button>
+        </div>
+    );
+};
+
+export default WithdrawalPage;
