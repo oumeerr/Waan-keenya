@@ -19,12 +19,12 @@ const App = () => {
     if (tg) {
       tg.ready();
       tg.expand();
-      tg.setHeaderColor('#020617'); // Match your theme
+      tg.setHeaderColor('#020617');
 
       const tgUser = tg.initDataUnsafe?.user;
       if (tgUser) {
         setUser(tgUser);
-        syncUserAndFetchBalance(tgUser.id);
+        fetchUserBalance(tgUser.id);
       } else {
         setLoading(false);
       }
@@ -33,7 +33,7 @@ const App = () => {
     }
   }, []);
 
-  const syncUserAndFetchBalance = async (userId: number) => {
+  const fetchUserBalance = async (userId: number) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -53,30 +53,35 @@ const App = () => {
 
   if (loading) {
     return (
-      <div style={{ backgroundColor: '#020617', height: '100vh', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p>Loading Beteseb...</p>
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center text-white">
+        <p className="animate-pulse font-bold">Loading Beteseb Bingo...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: '#020617', minHeight: '100vh', color: 'white', padding: '20px', fontFamily: 'sans-serif' }}>
-      <header style={{ borderBottom: '1px solid #1e293b', paddingBottom: '10px', marginBottom: '20px' }}>
-        <h1 style={{ color: '#fbbf24', margin: 0 }}>BETESEB BINGO</h1>
-        <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+    <div className="min-h-screen bg-[#020617] text-white p-5 font-sans">
+      <header className="border-b border-slate-800 pb-4 mb-6">
+        <h1 className="text-2xl font-black text-[#fbbf24] m-0">BETESEB BINGO</h1>
+        <p className="text-xs text-slate-400 mt-1">
           Welcome, {user?.username ? `@${user.username}` : user?.first_name || 'Guest'}
         </p>
       </header>
 
-      <div style={{ backgroundColor: '#0f172a', padding: '20px', borderRadius: '15px', textAlign: 'center', border: '1px solid #fbbf2433' }}>
-        <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>CURRENT BALANCE</span>
-        <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>{balance} ETB</span>
+      <div className="bg-[#0f172a] p-6 rounded-2xl text-center border border-[#fbbf2433]">
+        <span className="text-[10px] text-slate-400 block uppercase tracking-widest">Balance</span>
+        <span className="text-3xl font-black text-[#10b981]">{balance} <span className="text-sm">ETB</span></span>
       </div>
 
-      <main style={{ marginTop: '30px' }}>
-        {/* GAME CONTENT GOES HERE */}
-        {!user && (
-          <div style={{ backgroundColor: '#7f1d1d33', border: '1px solid #ef4444', padding: '15px', borderRadius: '10px', color: '#fca5a5', fontSize: '14px' }}>
+      <main className="mt-8">
+        {user ? (
+          <div className="text-center">
+             <button className="bg-[#fbbf24] text-[#020617] font-black py-4 px-10 rounded-xl shadow-lg active:scale-95 transition-transform">
+                START BINGO
+             </button>
+          </div>
+        ) : (
+          <div className="bg-red-900/20 border border-red-500 p-4 rounded-xl text-red-200 text-sm">
             ⚠️ Please open this app via the Telegram Bot to sync your wallet.
           </div>
         )}
@@ -89,7 +94,7 @@ const App = () => {
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
-  root.render(<App />); // Fixed: App must be inside the render call
+  root.render(<App />);
 }
 
 export default App;
